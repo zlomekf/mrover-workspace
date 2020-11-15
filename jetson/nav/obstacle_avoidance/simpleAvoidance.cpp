@@ -10,8 +10,8 @@
 // SimpleAvoidance is abstacted from ObstacleAvoidanceStateMachine object so it creates an
 // ObstacleAvoidanceStateMachine object with the roverStateMachine. The SimpleAvoidance object will
 // execute the logic for the simple avoidance algorithm
-SimpleAvoidance::SimpleAvoidance( StateMachine* roverStateMachine )
-    : ObstacleAvoidanceStateMachine( roverStateMachine ) {}
+SimpleAvoidance::SimpleAvoidance( StateMachine* roverStateMachine, Rover* Phoebe, const rapidjson::Document& RoverConfig )
+    : ObstacleAvoidanceStateMachine( roverStateMachine, Phoebe, RoverConfig ) {}
 
 // Destructs the SimpleAvoidance object.
 SimpleAvoidance::~SimpleAvoidance() {}
@@ -19,8 +19,7 @@ SimpleAvoidance::~SimpleAvoidance() {}
 // Turn away from obstacle until it is no longer detected.
 // If in search state and target is both detected and reachable, return NavState TurnToTarget.
 // ASSUMPTION: There is no rock that is more than 8 meters (pathWidth * 2) in diameter
-NavState SimpleAvoidance::executeTurnAroundObs( Rover* phoebe,
-                                                const rapidjson::Document& roverConfig )
+NavState SimpleAvoidance::executeTurnAroundObs()
 {
     if( isTargetDetected ( phoebe ) && isTargetReachable( phoebe, roverConfig ) )
     {
@@ -54,7 +53,7 @@ NavState SimpleAvoidance::executeTurnAroundObs( Rover* phoebe,
 
 // Drives to dummy waypoint. Once arrived, rover will drive to original waypoint
 // ( original waypoint is the waypoint before obstacle avoidance was triggered )
-NavState SimpleAvoidance::executeDriveAroundObs( Rover* phoebe )
+NavState SimpleAvoidance::executeDriveAroundObs()
 {
     if( isObstacleDetected( phoebe ) )
     {
@@ -86,7 +85,7 @@ NavState SimpleAvoidance::executeDriveAroundObs( Rover* phoebe )
 } // executeDriveAroundObs()
 
 // Create the odometry point used to drive around an obstacle
-Odometry SimpleAvoidance::createAvoidancePoint( Rover* phoebe, const double distance )
+Odometry SimpleAvoidance::createAvoidancePoint( const double distance )
 {
     Odometry avoidancePoint = phoebe->roverStatus().odometry();
     double totalLatitudeMinutes = avoidancePoint.latitude_min +

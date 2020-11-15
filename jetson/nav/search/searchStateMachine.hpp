@@ -20,31 +20,31 @@ public:
     /*************************************************************************/
     /* Public Member Functions */
     /*************************************************************************/
-    SearchStateMachine(StateMachine* stateMachine_);
+    SearchStateMachine(StateMachine* stateMachine_, Rover* phoebe,  const rapidjson::Document& roverConfig );
 
     virtual ~SearchStateMachine() {}
 
-    NavState run( Rover * phoebe, const rapidjson::Document& roverConfig );
+    NavState run();
 
-    bool targetReachable( Rover* phoebe, double distance, double bearing );
+    bool targetReachable();
 
-    virtual void initializeSearch( Rover* phoebe, const rapidjson::Document& roverConfig, double pathWidth ) = 0; // TODO
+    virtual void initializeSearch( double pathWidth ) = 0; // TODO
 
 private:
     /*************************************************************************/
     /* Private Member Functions */
     /*************************************************************************/
-    NavState executeSearchSpin( Rover* phoebe, const rapidjson::Document& roverConfig );
+    NavState executeSearchSpin();
 
-    NavState executeRoverWait( Rover* phoebe, const rapidjson::Document& roverConfig );
+    NavState executeRoverWait();
 
-    NavState executeSearchTurn( Rover* phoebe, const rapidjson::Document& roverConfig );
+    NavState executeSearchTurn();
 
-    NavState executeSearchDrive( Rover* phoebe );
+    NavState executeSearchDrive();
 
-    NavState executeTurnToTarget( Rover* phoebe );
+    NavState executeTurnToTarget();
 
-    NavState executeDriveToTarget( Rover* phoebe, const rapidjson::Document& roverConfig );
+    NavState executeDriveToTarget();
 
     void updateTargetAngle( double bearing );
 
@@ -62,12 +62,15 @@ private:
     // Last known angle of rover from turn to target.
     double mTurnToTargetRoverAngle;
 
+    // Reference to config variables
+    const rapidjson::Document& roverConfig;
+
 protected:
     /*************************************************************************/
     /* Protected Member Functions */
     /*************************************************************************/
 
-    void insertIntermediatePoints( Rover * phoebe, const rapidjson::Document& roverConfig );
+    void insertIntermediatePoints();
 
     /*************************************************************************/
     /* Protected Member Variables */
@@ -75,6 +78,9 @@ protected:
 
     // Pointer to rover State Machine to access member functions
     StateMachine* roverStateMachine;
+
+    // Pointer to rover object
+    Rover* phoebe;
 
     // Vector of search point multipliers used as a base for the search points.
     vector< pair<short, short> > mSearchPointMultipliers;

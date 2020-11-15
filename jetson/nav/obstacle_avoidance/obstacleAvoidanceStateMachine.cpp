@@ -7,9 +7,10 @@
 #include <iostream>
 
 // Constructs an ObstacleAvoidanceStateMachine object with roverStateMachine
-ObstacleAvoidanceStateMachine::ObstacleAvoidanceStateMachine( StateMachine* stateMachine_)
+ObstacleAvoidanceStateMachine::ObstacleAvoidanceStateMachine( StateMachine* stateMachine_, Rover* Phoebe, const rapidjson::Document& RoverConfig )
     : roverStateMachine( stateMachine_ ),
-      mJustDetectedObstacle( false ) {}
+      mJustDetectedObstacle( false ), phoebe( Phoebe ), 
+      roverConfig ( RoverConfig ){}
 
 // Allows outside objects to set the original obstacle angle
 // This will allow the variable to be set before the rover turns
@@ -36,7 +37,7 @@ void ObstacleAvoidanceStateMachine::updateObstacleElements( double bearing, doub
 // Runs the avoidance state machine through one iteration. This will be called by StateMachine
 // when NavState is in an obstacle avoidance state. This will call the corresponding function based
 // on the current state and return the next NavState
-NavState ObstacleAvoidanceStateMachine::run( Rover* phoebe, const rapidjson::Document& roverConfig )
+NavState ObstacleAvoidanceStateMachine::run()
 {
     switch ( phoebe->roverStatus().currentState() )
     {
@@ -61,7 +62,7 @@ NavState ObstacleAvoidanceStateMachine::run( Rover* phoebe, const rapidjson::Doc
 }
 
 // Checks that both rover is in search state and that target is detected
-bool ObstacleAvoidanceStateMachine::isTargetDetected ( Rover* phoebe )
+bool ObstacleAvoidanceStateMachine::isTargetDetected ()
 {
     return ( phoebe->roverStatus().currentState() == NavState::SearchTurnAroundObs &&
              phoebe->roverStatus().target().distance >= 0 );

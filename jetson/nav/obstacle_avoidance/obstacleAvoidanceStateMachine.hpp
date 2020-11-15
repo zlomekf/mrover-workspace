@@ -19,7 +19,7 @@ public:
     /*************************************************************************/
     /* Public Member Functions */
     /*************************************************************************/
-    ObstacleAvoidanceStateMachine( StateMachine* stateMachine_ );
+    ObstacleAvoidanceStateMachine( StateMachine* stateMachine_ , Rover* Phoebe, const rapidjson::Document& RoverConfig );
 
     virtual ~ObstacleAvoidanceStateMachine() {}
 
@@ -29,15 +29,15 @@ public:
 
     void updateObstacleElements( double bearing, double distance );  
 
-    NavState run( Rover* phoebe, const rapidjson::Document& roverConfig );
+    NavState run();
 
-    bool isTargetDetected( Rover* phoebe );
+    bool isTargetDetected();
 
-    virtual Odometry createAvoidancePoint( Rover* phoebe, const double distance ) = 0;
+    virtual Odometry createAvoidancePoint( const double distance ) = 0;
 
-    virtual NavState executeTurnAroundObs( Rover* phoebe, const rapidjson::Document& roverConfig ) = 0;
+    virtual NavState executeTurnAroundObs() = 0;
 
-    virtual NavState executeDriveAroundObs( Rover* phoebe ) = 0;
+    virtual NavState executeDriveAroundObs() = 0;
 
 protected:
     /*************************************************************************/
@@ -61,6 +61,14 @@ protected:
 
     // Last obstacle angle for consecutive angles
     double mLastObstacleAngle;
+
+    // Reference to config variables
+    const rapidjson::Document& roverConfig;
+
+    // Pointer to rover object
+    Rover* phoebe;
+
+
 };
 
 // Creates an ObstacleAvoidanceStateMachine object based on the inputted obstacle 

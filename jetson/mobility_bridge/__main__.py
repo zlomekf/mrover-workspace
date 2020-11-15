@@ -2,6 +2,8 @@ import serial
 #import lcm
 #from rover_msgs import AutonState, NavStatus
 import Adafruit_BBIO.UART as UART
+import numpy as np
+import struct
 
 
 baud = 115200
@@ -15,8 +17,11 @@ def main():
         ser.open()
         while 1:
             try:
-                ser.write(int.to_bytes(-100, 1, byteorder='little', signed=True))
-            except ser.SerialTimeoutException:
+                # ser.write(int.to_bytes(-100, 1, byteorder='little', signed=True))
+                rpm = np.int16(70<<8|100)  #decimal ver of 70, -100
+                ser.write(struct('<B', -25530)) # < makes it little endian and flips it to #-100, 70
+                #https://pymotw.com/2/struct/
+            except (ser.SerialTimeoutException):
                 print("Serial is not open")
  #       while(True):
  #           lcm_.handle()
