@@ -3,11 +3,12 @@ import serial
 #from rover_msgs import AutonState, NavStatus
 import Adafruit_BBIO.UART as UART
 import time
+import struct
 
 #TODO
 '''
+timing invariants
 functions for setting and reading individual registers? readability, style
-correct sleep time and timing invariants
 program control flow
 error handling
 LCM integration
@@ -59,7 +60,7 @@ measured_current_read = 115
 fault_read = 116
 
 #measured RPM -100 to 100. 8-bit signed  
-measured_PRM_read = 117
+measured_RPM_read = 117
 
 #######################################################################
 #defines
@@ -77,6 +78,8 @@ def serialWrite(command, data):
         buf = ((data <<8) | (0xFF & command))                       #create a 2 byte buffer to send 
         buf = int.to_bytes(buf, 2, byteorder='little', signed=True) #convert to 2 byte Little Endian
         ser.write(buf)
+        time.sleep(0.01)
+
 
 #read function which reads register specified by command
 #input:    command: command for register to be written to 
@@ -84,75 +87,72 @@ def serialWrite(command, data):
 #returns:   byte that was read
 def serialRead(command):
     with serial.Serial(port= uartPort, baudrate=baud) as ser:            #matching serial declaration
-        buf = int.to_bytes(command, 1, byteorder= 'little', signed=True) #create input byte buffer
-        return ser.read(buf)                                             #return read value
+        serialWrite(command, 0)                                          #write command
+        rcvd = ser.read()
+        time.sleep(0.01)
+        return rcvd                                               #return read value
 
 
 #sets P to target P
 #input:  32 bit float
 # DRIVER MUST BE DISABLED
 def setP(targetP):
-    target0 = (targetP & 0xFF)
-    target1 = (targetP & 0xFF << 8) >> 8
-    target2 = (targetP & 0xFF << 16) >> 16
-    target3 = (targetP & 0xFF << 24) >> 24
-    serialWrite(-102, target0)
-    serialWrite(-103, target1)
-    serialWrite(-104, target2)
-    serialWrite(-105, target3)
+    ba = bytearray(struct.pack("<f", targetP))
+    serialWrite(-102, ba[0])
+    serialWrite(-103, ba[1])
+    serialWrite(-104, ba[2])
+    serialWrite(-105, ba[3])
 
 #sets I to target I
 #input:  32 bit float
 # DRIVER MUST BE DISABLED
 def setI(targetI):
-    target0 = (targetI & 0xFF)
-    target1 = (targetI & 0xFF << 8) >> 8
-    target2 = (targetI & 0xFF << 16) >> 16
-    target3 = (targetI & 0xFF << 24) >> 24
-    serialWrite(-106, target0)
-    serialWrite(-107, target1)
-    serialWrite(-108, target2)
-    serialWrite(-109, target3)
+    ba = bytearray(struct.pack("<f", targetI))
+    serialWrite(-106, ba[0])
+    serialWrite(-107, ba[1])
+    serialWrite(-108, ba[2])
+    serialWrite(-109, ba[3])
 
 #sets D to target D
 #input:  32 bit float
 # DRIVER MUST BE DISABLED
 def setD(targetD):
-    target0 = (targetD & 0xFF)
-    target1 = (targetD & 0xFF << 8) >> 8
-    target2 = (targetD & 0xFF << 16) >> 16
-    target3 = (targetD & 0xFF << 24) >> 24
-    serialWrite(-110, target0)
-    serialWrite(-111, target1)
-    serialWrite(-112, target2)
-    serialWrite(-113, target3)
+    ba = bytearray(struct.pack("<f", targetI))
+    serialWrite(-110, ba[0])
+    serialWrite(-111, ba[1])
+    serialWrite(-112, ba[2])
+    serialWrite(-113, ba[3])
 
 #reads last set P
 #returns 32 bit float
 def readP():
-    last0 = serialRead(102)
-    last1 = serialRead(103)
-    last2 = serialRead(104)
-    last3 = serialRead(105)
-    return (last3 << 24) | (last2 << 16) | (last1 << 8) | (last0) 
+    last = bytearray(4)
+    last[0] = (serialRead(102))
+    last[1]= (serialRead(103))
+    last[2] = (serialRead(104))
+    last[3] = (serialRead(105))
+    return struct.unpack('<f', last)
 
 #reads last set I
 #returns 32 bit float
 def readI():
-    last0 = serialRead(106)
-    last1 = serialRead(107)
-    last2 = serialRead(108)
-    last3 = serialRead(109)
-    return (last3 << 24) | (last2 << 16) | (last1 << 8) | (last0) 
+    last = bytearray(4)
+    last[0] = (serialRead(106))
+    last[1] = (serialRead(107))
+    last[2] = (serialRead(108))
+    last[3] = (serialRead(109))
+    return struct.unpack('<f', last)
 
 #reads last set D
 #returns 32 bit float
 def readD():
-    last0 = serialRead(110)
-    last1 = serialRead(111)
-    last2 = serialRead(112)
-    last3 = serialRead(113)
-    return (last3 << 24) | (last2 << 16) | (last1 << 8) | (last0) 
+    last = bytearray(4)
+    last[0] = (serialRead(110))
+    last[1] = (serialRead(111))
+    last[2] = (serialRead(112))
+    last[3] = (serialRead(113))
+    return struct.unpack('<f', last)
+
 
 def main():
     UART.setup("UART4")
@@ -160,34 +160,32 @@ def main():
         try:
             ser.close()
             ser.open()
-            #TODO set PID values before active
+            #TODO set PID values before active??
             #write positive value to enable reg
             serialWrite(enable_write, 3)
             #set current limit to 25 deciAmps (TODO should this be after EN)
             serialWrite(current_limit_write, 25)
             #set RPM value
             serialWrite(RPM_write, 10)
-            print(serialRead(set_RPM_read))
-            print(serialRead(set_current_limit_read))
-            print(serialRead(measured_current_read))
-            print(serialRead(measured_RPM_read))
-            print(serialRead(readP))
-            print(serialRead(readI))
-            print(serialRead(readD))
+            print(int.from_bytes(serialRead(set_RPM_read), byteorder='little', signed=True))
+            print(int.from_bytes(serialRead(set_current_limit_read), byteorder='little', signed=False))
+            print(int.from_bytes(serialRead(measured_current_read), byteorder='little', signed=False))
+            print(int.from_bytes(serialRead(fault_read), byteorder='little', signed=False))
+            print(int.from_bytes(serialRead(measured_RPM_read), byteorder='little', signed=True))
+            #print(readP())
+            #print(readI())
+            #print(readD()) #TODO fix translation into float
         except ser.SerialTimeoutException:
             print("Serial is not open")
-        time.sleep(0.001) #small delay TODO correct timing
-
-        '''
-        while 1:
-            try:
-                serialWrite(-101, 70) #write 70 to 101
-            #Serial port exception
-            except ser.SerialTimeoutException:
-                print("Serial is not open")
-        '''    
- #       while(True):
- #           lcm_.handle()
+        time.sleep(0.01) #small delay TODO correct timing
+    while 1:    
+        try:
+            serialRead(fault_read) #write 70 to 101
+        #Serial port exception
+        except ser.SerialTimeoutException:
+            print("Serial is not open")
+        time.sleep(1)
+        
 
 if __name__ == "__main__":
     main()
