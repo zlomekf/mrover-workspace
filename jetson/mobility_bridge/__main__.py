@@ -67,6 +67,14 @@ measured_RPM_read = 117
 baud = 115200
 uartPort = "/dev/ttyS4"
 
+# configure the serial connections (set port yourself)
+ser = serial.Serial(
+    port=uartPort,
+    baudrate=115200,
+    parity=serial.PARITY_NONE,
+    stopbits=serial.STOPBITS_ONE,
+    bytesize=serial.EIGHTBITS
+)
 
 #write function. takes in command and data to be written
 #inputs:    command: command for register to be written to 
@@ -74,7 +82,6 @@ uartPort = "/dev/ttyS4"
 #           data: 8-bit value 
 #returns:   N/A
 def serialWrite(command, data):
-    with serial.Serial(port= uartPort, baudrate=baud) as ser:       #matching serial declaration
         buf = ((data <<8) | (0xFF & command))                       #create a 2 byte buffer to send 
         buf = int.to_bytes(buf, 2, byteorder='little', signed=True) #convert to 2 byte Little Endian
         ser.write(buf)
@@ -86,7 +93,6 @@ def serialWrite(command, data):
 #   valid inputs: 101 to 117
 #returns:   byte that was read
 def serialRead(command):
-    with serial.Serial(port= uartPort, baudrate=baud) as ser:            #matching serial declaration
         serialWrite(command, 0)                                          #write command
         rcvd = ser.read()
         time.sleep(0.01)
@@ -156,30 +162,40 @@ def readD():
 
 def main():
     UART.setup("UART4")
-    with serial.Serial(port= uartPort, baudrate=baud) as ser:
-        try:
-            ser.close()
-            ser.open()
-            #TODO set PID values before active??
-            #setP(0.0)
-            #setI(0.0)
-            #setD(0.0)
-            #write positive value to enable reg
-            serialWrite(enable_write, 3)
-            #set current limit to 25 deciAmps (TODO should this be after EN)
-            serialWrite(current_limit_write, 25)
-            #set RPM value
-            serialWrite(RPM_write, 10)
-            print(int.from_bytes(serialRead(set_RPM_read), byteorder='little', signed=True))
-            print(int.from_bytes(serialRead(set_current_limit_read), byteorder='little', signed=False))
-            print(int.from_bytes(serialRead(measured_current_read), byteorder='little', signed=False))
-            print(int.from_bytes(serialRead(fault_read), byteorder='little', signed=False))
-            print(int.from_bytes(serialRead(measured_RPM_read), byteorder='little', signed=True))
-            print(readP())
-            print(readI())
-            print(readD()) 
-        except ser.SerialTimeoutException:
-            print("Serial is not open")
+    try:
+        ser.close()
+        ser.open()
+        print("initial")
+        #TODO set PID values before active??
+        #setP(0.0)
+        #setI(0.0)
+        #setD(0.0)
+        #write positive value to enable reg
+        serialWrite(enable_write, 3)
+        print("wrote enable")
+        #set current limit to 25 deciAmps (TODO should this be after EN)
+        serialWrite(current_limit_write, 25)
+        print("wrote current")
+        #set RPM value
+        serialWrite(RPM_write, 10)
+        print("wrote RPM")
+        print(int.from_bytes(serialRead(set_RPM_read), byteorder='big', signed=True))
+        print("read 1")
+        print(int.from_bytes(serialRead(set_current_limit_read), byteorder='big', signed=False))
+        print("read 2")
+        print(int.from_bytes(serialRead(measured_current_read), byteorder='big', signed=False))
+        print("read 3")
+        print(int.from_bytes(serialRead(fault_read), byteorder='big', signed=False))
+        print("read 4")
+        print(int.from_bytes(serialRead(measured_RPM_read), byteorder='big', signed=True))
+        print("read 5")
+        print(readP())
+        print("read 6")
+        print(readI())
+        print("read 7")
+        print(readD()) 
+    except ser.SerialTimeoutException:
+        print("Serial is not open")
     while 1:    
         try:
             serialRead(fault_read) #write 70 to 101
