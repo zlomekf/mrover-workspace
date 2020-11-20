@@ -117,7 +117,7 @@ def setI(targetI):
 #input:  32 bit float
 # DRIVER MUST BE DISABLED
 def setD(targetD):
-    ba = bytearray(struct.pack("<f", targetI))
+    ba = bytearray(struct.pack("<f", targetD))
     serialWrite(-110, ba[0])
     serialWrite(-111, ba[1])
     serialWrite(-112, ba[2])
@@ -161,6 +161,9 @@ def main():
             ser.close()
             ser.open()
             #TODO set PID values before active??
+            setP(0.0)
+            setI(0.0)
+            setD(0.0)
             #write positive value to enable reg
             serialWrite(enable_write, 3)
             #set current limit to 25 deciAmps (TODO should this be after EN)
@@ -174,10 +177,9 @@ def main():
             print(int.from_bytes(serialRead(measured_RPM_read), byteorder='little', signed=True))
             #print(readP())
             #print(readI())
-            #print(readD()) #TODO fix translation into float
+            #print(readD()) 
         except ser.SerialTimeoutException:
             print("Serial is not open")
-        time.sleep(0.01) #small delay TODO correct timing
     while 1:    
         try:
             serialRead(fault_read) #write 70 to 101
