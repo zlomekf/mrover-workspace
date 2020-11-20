@@ -83,7 +83,7 @@ ser = serial.Serial(
 #returns:   N/A
 def serialWrite(command, data):
         buf = ((data <<8) | (0xFF & command))                       #create a 2 byte buffer to send 
-        buf = int.to_bytes(buf, 2, byteorder='little', signed=True) #convert to 2 byte Little Endian
+        buf = int.to_bytes(buf, 2, byteorder='big', signed=True) #convert to 2 byte Little Endian
         ser.write(buf)
         time.sleep(0.01)
 
@@ -159,7 +159,11 @@ def readD():
     last[3] = (serialRead(113))
     return struct.unpack('<f', last)
 
-
+#set target 
+#read target
+#read actual velocity
+#enable
+#diable
 def main():
     UART.setup("UART4")
     try:
@@ -174,11 +178,12 @@ def main():
         serialWrite(enable_write, 3)
         print("wrote enable")
         #set current limit to 25 deciAmps (TODO should this be after EN)
-        serialWrite(current_limit_write, 25)
+        #serialWrite(current_limit_write, 25)
         print("wrote current")
         #set RPM value
         serialWrite(RPM_write, 10)
         print("wrote RPM")
+        '''  
         print(int.from_bytes(serialRead(set_RPM_read), byteorder='big', signed=True))
         print("read 1")
         print(int.from_bytes(serialRead(set_current_limit_read), byteorder='big', signed=False))
@@ -194,11 +199,12 @@ def main():
         print(readI())
         print("read 7")
         print(readD()) 
+        '''
     except ser.SerialTimeoutException:
         print("Serial is not open")
     while 1:    
         try:
-            serialRead(fault_read) #write 70 to 101
+            serialWrite(RPM_write, 10)
         #Serial port exception
         except ser.SerialTimeoutException:
             print("Serial is not open")
