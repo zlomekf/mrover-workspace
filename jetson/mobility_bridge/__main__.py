@@ -161,9 +161,9 @@ def main():
             ser.close()
             ser.open()
             #TODO set PID values before active??
-            setP(0.0)
-            setI(0.0)
-            setD(0.0)
+            #setP(0.0)
+            #setI(0.0)
+            #setD(0.0)
             #write positive value to enable reg
             serialWrite(enable_write, 3)
             #set current limit to 25 deciAmps (TODO should this be after EN)
