@@ -175,9 +175,9 @@ def main():
             print(int.from_bytes(serialRead(measured_current_read), byteorder='little', signed=False))
             print(int.from_bytes(serialRead(fault_read), byteorder='little', signed=False))
             print(int.from_bytes(serialRead(measured_RPM_read), byteorder='little', signed=True))
-            #print(readP())
-            #print(readI())
-            #print(readD()) 
+            print(readP())
+            print(readI())
+            print(readD()) 
         except ser.SerialTimeoutException:
             print("Serial is not open")
     while 1:    
