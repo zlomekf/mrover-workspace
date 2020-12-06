@@ -82,8 +82,8 @@ ser = serial.Serial(
 #           data: 8-bit value 
 #returns:   N/A
 def serialWrite(command, data):
-        buf = ((data <<8) | (0xFF & command))                       #create a 2 byte buffer to send 
-        buf = int.to_bytes(buf, 2, byteorder='big', signed=True) #convert to 2 byte Little Endian
+        num = ((command <<8) | (0xFF & data))                       #create a 2 byte buffer to send 
+        buf = int.to_bytes(num, 2, byteorder='big', signed=True) #send as 2 byte big Endian
         ser.write(buf)
         time.sleep(0.01)
 
@@ -175,11 +175,11 @@ def main():
         #setI(0.0)
         #setD(0.0)
         #write positive value to enable reg
-        serialWrite(enable_write, 3)
+        serialWrite(enable_write, 0)
         print("wrote enable")
         #set current limit to 25 deciAmps (TODO should this be after EN)
         #serialWrite(current_limit_write, 25)
-        print("wrote current")
+        #print("wrote current")
         #set RPM value
         serialWrite(RPM_write, 10)
         print("wrote RPM")
